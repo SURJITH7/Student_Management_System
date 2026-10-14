@@ -15,7 +15,7 @@ function App() {
 
 
     const getStudents = () => {
-        fetch(`$(API)`)
+        fetch(API)
             .then(response => response.json())
             .then(data => setStudents(data));
     };
@@ -27,7 +27,7 @@ function App() {
 
 
     const addStudent = () => {
-        fetch(`$(API)`, {
+        fetch(API, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -61,7 +61,7 @@ function App() {
 
     const updateStudent = () => {
         
-        fetch(`$(API)/${editId}`, {
+        fetch((API)/{editId}, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
@@ -86,7 +86,7 @@ function App() {
 
 
     const deleteStudent = (id) => {
-        fetch(`$(API)/${id}`, {
+        fetch(API/{id}, {
             method: "DELETE"
         })
             .then(response => response.json())
