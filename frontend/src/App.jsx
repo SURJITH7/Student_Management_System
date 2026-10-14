@@ -10,9 +10,12 @@ function App() {
     const [address, setAddress] = useState("");
     const [editId, setEditId] = useState(null);
 
+    const API = import.meta.env.VITE_API_URL ||
+  "http://localhost:7300/students";
+
 
     const getStudents = () => {
-        fetch(`${import.meta.env.VITE_API_URL}`)
+        fetch(`$(API)`)
             .then(response => response.json())
             .then(data => setStudents(data));
     };
@@ -24,7 +27,7 @@ function App() {
 
 
     const addStudent = () => {
-        fetch(`${import.meta.env.VITE_API_URL}`, {
+        fetch(`$(API)`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -57,7 +60,8 @@ function App() {
 
 
     const updateStudent = () => {
-        fetch(`${import.meta.env.VITE_API_URL}/${editId}`, {
+        
+        fetch(`$(API)/${editId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
@@ -82,7 +86,7 @@ function App() {
 
 
     const deleteStudent = (id) => {
-        fetch(`${import.meta.env.VITE_API_URL}/${id}`, {
+        fetch(`$(API)/${id}`, {
             method: "DELETE"
         })
             .then(response => response.json())
