@@ -1,6 +1,6 @@
+
 import { useEffect, useState } from "react";
 import "./App.css";
-
 
 function App() {
     const [students, setStudents] = useState([]);
@@ -10,46 +10,84 @@ function App() {
     const [address, setAddress] = useState("");
     const [editId, setEditId] = useState(null);
 
-    const API = import.meta.env.VITE_API_URL ||
-  "http://localhost:7300/students";
+    const API =
+        import.meta.env.VITE_API_URL ||
+        "http://localhost:7300/students";
 
+    const apiRequest = async (url, options = {}) => {
+        const response = await fetch(url, options);
+        const text = await response.text();
 
-    const getStudents = () => {
-        fetch(API)
-            .then(response => response.json())
-            .then(data => setStudents(data));
+        let data = null;
+
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch {
+                throw new Error(
+                    `Expected JSON but received: ${text.slice(0, 100)}`
+                );
+            }
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data?.message || `HTTP error: ${response.status}`
+            );
+        }
+
+        return data;
     };
 
+    // Get all students
+    const getStudents = async () => {
+        try {
+            const data = await apiRequest(API);
+            setStudents(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Error fetching students:", error);
+            alert(error.message);
+        }
+    };
 
     useEffect(() => {
         getStudents();
     }, []);
 
-
-    const addStudent = () => {
-        fetch(API, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name,
-                email,
-                course,
-                address
-            })
-        })
-            .then(response => response.json())
-            .then(() => {
-                setName("");
-                setEmail("");
-                setCourse("");
-                setAddress("");
-                getStudents();
-            });
+    // Clear form
+    const clearForm = () => {
+        setName("");
+        setEmail("");
+        setCourse("");
+        setAddress("");
+        setEditId(null);
     };
 
+    // Add student
+    const addStudent = async () => {
+        try {
+            await apiRequest(API, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    course,
+                    address,
+                }),
+            });
 
+            clearForm();
+            await getStudents();
+        } catch (error) {
+            console.error("Error adding student:", error);
+            alert(error.message);
+        }
+    };
+
+    // Load student details into the form
     const editStudent = (student) => {
         setEditId(student.id);
         setName(student.name);
@@ -58,83 +96,77 @@ function App() {
         setAddress(student.address);
     };
 
-
-    const updateStudent = () => {
-        
-        fetch((API)/{editId}, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name,
-                email,
-                course,
-                address
-            })
-        })
-            .then(response => response.json())
-            .then(() => {
-                setName("");
-                setEmail("");
-                setCourse("");
-                setAddress("");
-                setEditId(null);
-                getStudents();
+    // Update student
+    const updateStudent = async () => {
+        try {
+            await apiRequest(`${API}/${editId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    course,
+                    address,
+                }),
             });
+
+            clearForm();
+            await getStudents();
+        } catch (error) {
+            console.error("Error updating student:", error);
+            alert(error.message);
+        }
     };
 
-
-    const deleteStudent = (id) => {
-        fetch(API/{id}, {
-            method: "DELETE"
-        })
-            .then(response => response.json())
-            .then(() => {
-                getStudents();
+    // Delete student
+    const deleteStudent = async (id) => {
+        try {
+            await apiRequest(`${API}/${id}`, {
+                method: "DELETE",
             });
-    };
 
+            await getStudents();
+        } catch (error) {
+            console.error("Error deleting student:", error);
+            alert(error.message);
+        }
+    };
 
     return (
         <div className="container">
             <h1>Student Management System</h1>
-
 
             <div className="form">
                 <input
                     type="text"
                     placeholder="Enter Name"
                     value={name}
-                    onChange={e => setName(e.target.value)}
+                    onChange={(e) => setName(e.target.value)}
                 />
-
 
                 <input
                     type="email"
                     placeholder="Enter Email"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                 />
 
-
-               
                 <input
                     type="text"
                     placeholder="Enter Course"
                     value={course}
-                    onChange={e => setCourse(e.target.value)}
+                    onChange={(e) => setCourse(e.target.value)}
                 />
 
-                 <input
+                <input
                     type="text"
                     placeholder="Enter Address"
                     value={address}
-                    onChange={e => setAddress(e.target.value)}
+                    onChange={(e) => setAddress(e.target.value)}
                 />
-
             </div>
-
 
             <div className="main-buttons">
                 {editId === null ? (
@@ -147,26 +179,30 @@ function App() {
                     </button>
                 )}
 
-
                 <button onClick={getStudents}>
                     Refresh
                 </button>
-            </div>
 
+                {editId !== null && (
+                    <button onClick={clearForm}>
+                        Cancel
+                    </button>
+                )}
+            </div>
 
             <h2>Students</h2>
 
-
             <div className="students">
-                {students.map(student => (
-                    <div className="student-card" key={student.id}>
+                {students.map((student) => (
+                    <div
+                        className="student-card"
+                        key={student.id}
+                    >
                         <h3>{student.name}</h3>
-
 
                         <p>
                             <strong>Email:</strong> {student.email}
                         </p>
-
 
                         <p>
                             <strong>Course:</strong> {student.course}
@@ -176,14 +212,16 @@ function App() {
                             <strong>Address:</strong> {student.address}
                         </p>
 
-
                         <div className="card-buttons">
-                            <button onClick={() => editStudent(student)}>
+                            <button
+                                onClick={() => editStudent(student)}
+                            >
                                 Edit
                             </button>
 
-
-                            <button onClick={() => deleteStudent(student.id)}>
+                            <button
+                                onClick={() => deleteStudent(student.id)}
+                            >
                                 Delete
                             </button>
                         </div>
@@ -193,6 +231,5 @@ function App() {
         </div>
     );
 }
-
 
 export default App;
